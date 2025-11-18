@@ -7,33 +7,25 @@ use App\Models\Warga;
 
 class WargaController extends Controller
 {
-    /**
-     * Tampilkan semua data warga.
-     */
     public function index()
     {
         $warga = Warga::all();
-        return view('admin.warga.index', compact('warga'));
+        return view('pages.warga.index', compact('warga'));
     }
 
-    /**
-     * Form tambah warga.
-     */
     public function create()
     {
-        return view('admin.warga.create');
+        return view('pages.warga.create');
+        //////
     }
 
-    /**
-     * Simpan data warga baru.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
             'no_ktp' => 'required|unique:warga,no_ktp',
             'nama' => 'required|string|max:100',
             'alamat' => 'required|string|max:255',
-            'jenis_kelamin' => 'required|in:L,P', // Sesuaikan dengan form
+            'jenis_kelamin' => 'required|in:L,P',
             'agama' => 'required|string|max:50',
             'pekerjaan' => 'required|string|max:100',
             'telp' => 'required|string|max:20',
@@ -42,21 +34,15 @@ class WargaController extends Controller
 
         Warga::create($validated);
 
-        return redirect()->route('admin.warga.index')->with('success', 'Data warga berhasil ditambahkan.');
+        return redirect()->route('warga.index')->with('success', 'Data warga berhasil ditambahkan.'); // HAPUS 'admin.'
     }
 
-    /**
-     * Form edit data warga.
-     */
     public function edit($id)
     {
         $warga = Warga::findOrFail($id);
-        return view('admin.warga.edit', compact('warga'));
+        return view('pages.warga.edit', compact('warga'));
     }
 
-    /**
-     * Update data warga.
-     */
     public function update(Request $request, $id)
     {
         $warga = Warga::findOrFail($id);
@@ -65,7 +51,7 @@ class WargaController extends Controller
             'no_ktp' => 'required|unique:warga,no_ktp,' . $id . ',warga_id',
             'nama' => 'required|string|max:100',
             'alamat' => 'required|string|max:255',
-            'jenis_kelamin' => 'required|in:L,P', // Sesuaikan dengan form
+            'jenis_kelamin' => 'required|in:L,P',
             'agama' => 'required|string|max:50',
             'pekerjaan' => 'required|string|max:100',
             'telp' => 'required|string|max:20',
@@ -74,17 +60,14 @@ class WargaController extends Controller
 
         $warga->update($validated);
 
-        return redirect()->route('admin.warga.index')->with('success', 'Data warga berhasil diperbarui.');
+        return redirect()->route('warga.index')->with('success', 'Data warga berhasil diperbarui.'); // HAPUS 'admin.'
     }
 
-    /**
-     * Hapus data warga.
-     */
     public function destroy($id)
     {
         $warga = Warga::findOrFail($id);
         $warga->delete();
 
-        return redirect()->route('admin.warga.index')->with('success', 'Data warga berhasil dihapus.');
+        return redirect()->route('warga.index')->with('success', 'Data warga berhasil dihapus.'); // HAPUS 'admin.'
     }
 }

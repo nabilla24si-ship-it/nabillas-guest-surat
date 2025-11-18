@@ -16,7 +16,7 @@ class Warga extends Model
     protected $fillable = [
         'no_ktp',
         'nama',
-        'alamat', 
+        'alamat',
         'jenis_kelamin',
         'agama',
         'pekerjaan',
@@ -24,3 +24,4 @@ class Warga extends Model
         'email',
     ];
 }
+/////

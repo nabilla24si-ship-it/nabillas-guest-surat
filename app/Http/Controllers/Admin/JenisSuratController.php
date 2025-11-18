@@ -11,12 +11,12 @@ class JenisSuratController extends Controller
     public function index()
     {
         $surats = JenisSurat::all();
-        return view('admin.jenis_surat.index', compact('surats'));
+        return view('pages.jenis_surat.index', compact('surats'));
     }
 
     public function create()
     {
-        return view('admin.jenis_surat.create');
+        return view('pages.jenis_surat.create');
     }
 
     public function store(Request $request)
@@ -27,7 +27,6 @@ class JenisSuratController extends Controller
             'syarat_json' => 'nullable|string',
         ]);
 
-        // Konversi input CSV menjadi JSON
         if (!empty($validated['syarat_json'])) {
             $syarat_array = array_map('trim', explode(',', $validated['syarat_json']));
             $validated['syarat_json'] = json_encode($syarat_array);
@@ -35,13 +34,13 @@ class JenisSuratController extends Controller
 
         JenisSurat::create($validated);
 
-        return redirect()->route('admin.jenis-surat.index')->with('success', 'Jenis surat berhasil ditambahkan.');
+        return redirect()->route('jenis-surat.index')->with('success', 'Jenis surat berhasil ditambahkan.'); // HAPUS 'admin.'
     }
 
     public function edit($id)
     {
         $surat = JenisSurat::findOrFail($id);
-        return view('admin.jenis_surat.edit', compact('surat')); // <--- nama variabel benar
+        return view('pages.jenis_surat.edit', compact('surat'));
     }
 
     public function update(Request $request, $id)
@@ -54,7 +53,6 @@ class JenisSuratController extends Controller
             'syarat_json' => 'nullable|string'
         ]);
 
-        // Konversi input CSV menjadi JSON
         if (!empty($validated['syarat_json'])) {
             $syarat_array = array_map('trim', explode(',', $validated['syarat_json']));
             $validated['syarat_json'] = json_encode($syarat_array);
@@ -62,12 +60,12 @@ class JenisSuratController extends Controller
 
         $surat->update($validated);
 
-        return redirect()->route('admin.jenis-surat.index')->with('success', 'Jenis surat berhasil diperbarui.');
+        return redirect()->route('jenis-surat.index')->with('success', 'Jenis surat berhasil diperbarui.'); // HAPUS 'admin.'
     }
 
     public function destroy($id)
     {
         JenisSurat::findOrFail($id)->delete();
-        return redirect()->route('admin.jenis-surat.index')->with('success', 'Jenis surat berhasil dihapus.');
+        return redirect()->route('jenis-surat.index')->with('success', 'Jenis surat berhasil dihapus.'); // HAPUS 'admin.'
     }
 }
