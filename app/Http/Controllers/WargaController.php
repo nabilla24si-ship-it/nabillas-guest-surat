@@ -12,7 +12,7 @@ class WargaController extends Controller
         $warga = Warga::all();
         return view('pages.warga.index', compact('warga'));
     }
-
+////
     public function create()
     {
         return view('pages.warga.create');
