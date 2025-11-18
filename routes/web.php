@@ -5,6 +5,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\WargaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\JenisSuratController;
+use App\Http\Controllers\Admin\PermohonanSuratController;
 
 // Route untuk halaman utama
 Route::get('/', function () {
@@ -38,12 +39,13 @@ Route::get('/team', function () {
 Route::get('/project', function () {
     return view('pages.halaman.project');
 })->name('project');
-// 
+//
 Route::get('/testimonial', function () {
     return view('pages.halaman.testimonial');
 })->name('testimonial');
 
-// CRUD Routes - ✅ SUDAH BENAR
 Route::resource('warga', WargaController::class);
 Route::resource('jenis-surat', JenisSuratController::class);
+Route::resource('permohonan-surat', PermohonanSuratController::class);
 Route::resource('user', UserController::class);
+
