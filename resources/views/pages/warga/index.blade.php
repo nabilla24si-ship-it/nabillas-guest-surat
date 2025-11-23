@@ -40,7 +40,7 @@
         <div class="d-flex justify-content-between align-items-center mb-5">
             <div>
                 <h2 class="text-primary mb-1">Data Warga Desa</h2>
-                <p class="mb-0">Daftar seluruh data warga desa kami</p>
+                <p class="mb-0">Menampilkan {{ $warga->total() }} data warga</p>
             </div>
             <div>
                 <a href="{{ route('warga.create') }}" class="btn btn-success">
@@ -49,31 +49,78 @@
             </div>
         </div>
 
-        <!-- Search and Filter -->
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Cari nama warga..." id="searchInput">
-                    <button class="btn btn-primary" type="button">
-                        <i class="fas fa-search"></i>
-                    </button>
+        <!-- Search and Filter Form -->
+        <form method="GET" action="{{ route('warga.index') }}" class="mb-4">
+            <div class="row g-3">
+                <!-- Search Input -->
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control"
+                               value="{{ request('search') }}" placeholder="Cari nama, alamat, no KTP..."
+                               aria-label="Search">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                        @if(request('search'))
+                            <a href="{{ request()->fullUrlWithQuery(['search' => null]) }}"
+                               class="btn btn-outline-secondary" id="clear-search">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Filter Jenis Kelamin -->
+                <div class="col-md-3">
+                    <select name="jenis_kelamin" class="form-select" onchange="this.form.submit()">
+                        <option value="">Semua Jenis Kelamin</option>
+                        <option value="L" {{ request('jenis_kelamin') == 'L' ? 'selected' : '' }}>Laki-laki</option>
+                        <option value="P" {{ request('jenis_kelamin') == 'P' ? 'selected' : '' }}>Perempuan</option>
+                    </select>
+                </div>
+
+                <!-- Filter Agama -->
+                <div class="col-md-3">
+                    <select name="agama" class="form-select" onchange="this.form.submit()">
+                        <option value="">Semua Agama</option>
+                        <option value="Islam" {{ request('agama') == 'Islam' ? 'selected' : '' }}>Islam</option>
+                        <option value="Kristen" {{ request('agama') == 'Kristen' ? 'selected' : '' }}>Kristen</option>
+                        <option value="Katolik" {{ request('agama') == 'Katolik' ? 'selected' : '' }}>Katolik</option>
+                        <option value="Hindu" {{ request('agama') == 'Hindu' ? 'selected' : '' }}>Hindu</option>
+                        <option value="Buddha" {{ request('agama') == 'Buddha' ? 'selected' : '' }}>Buddha</option>
+                        <option value="Konghucu" {{ request('agama') == 'Konghucu' ? 'selected' : '' }}>Konghucu</option>
+                    </select>
+                </div>
+
+                <!-- Reset Filter -->
+                <div class="col-md-2">
+                    <a href="{{ route('warga.index') }}" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-refresh me-1"></i>Reset
+                    </a>
                 </div>
             </div>
-            <div class="col-md-6">
-                <select class="form-select" id="filterJenisKelamin">
-                    <option value="">Semua Jenis Kelamin</option>
-                    <option value="L">Laki-laki</option>
-                    <option value="P">Perempuan</option>
-                </select>
-            </div>
+        </form>
+
+        <!-- Info Filter Aktif -->
+        @if(request()->anyFilled(['search', 'jenis_kelamin', 'agama']))
+        <div class="alert alert-info mb-4">
+            <small>
+                <i class="fas fa-info-circle me-1"></i>
+                Filter aktif:
+                @if(request('search')) <span class="badge bg-primary me-1">Pencarian: "{{ request('search') }}"</span> @endif
+                @if(request('jenis_kelamin')) <span class="badge bg-primary me-1">Jenis Kelamin: {{ request('jenis_kelamin') == 'L' ? 'Laki-laki' : 'Perempuan' }}</span> @endif
+                @if(request('agama')) <span class="badge bg-primary me-1">Agama: {{ request('agama') }}</span> @endif
+                <a href="{{ route('warga.index') }}" class="text-danger ms-2">
+                    <i class="fas fa-times me-1"></i>Hapus semua filter
+                </a>
+            </small>
         </div>
+        @endif
 
         <!-- Warga Cards -->
         <div class="row" id="wargaContainer">
             @forelse ($warga as $item)
-                <div class="col-lg-6 col-xl-4 mb-4 warga-card"
-                     data-name="{{ strtolower($item->nama) }}"
-                     data-jenis-kelamin="{{ $item->jenis_kelamin }}">
+                <div class="col-lg-6 col-xl-4 mb-4 warga-card">
                     <div class="card border-0 shadow-sm h-100 hover-card">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-3">
@@ -171,16 +218,44 @@
                     <div class="card border-0 text-center py-5">
                         <div class="card-body">
                             <i class="fas fa-users fa-4x text-muted mb-3"></i>
-                            <h4 class="text-muted">Belum ada data warga</h4>
-                            <p class="text-muted mb-4">Silakan tambah data warga pertama Anda</p>
-                            <a href="{{ route('warga.create') }}" class="btn btn-primary btn-lg">
-                                <i class="fas fa-plus me-2"></i>Tambah Data Warga
-                            </a>
+                            <h4 class="text-muted">Tidak ada data warga</h4>
+                            <p class="text-muted mb-4">
+                                @if(request()->anyFilled(['search', 'jenis_kelamin', 'agama']))
+                                    Data tidak ditemukan dengan filter yang dipilih
+                                @else
+                                    Belum ada data warga
+                                @endif
+                            </p>
+                            @if(request()->anyFilled(['search', 'jenis_kelamin', 'agama']))
+                                <a href="{{ route('warga.index') }}" class="btn btn-primary">
+                                    <i class="fas fa-refresh me-2"></i>Reset Filter
+                                </a>
+                            @else
+                                <a href="{{ route('warga.create') }}" class="btn btn-primary">
+                                    <i class="fas fa-plus me-2"></i>Tambah Data Warga
+                                </a>
+                            @endif
                         </div>
                     </div>
                 </div>
             @endforelse
         </div>
+
+        <!-- Pagination -->
+        @if($warga->hasPages())
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="text-muted">
+                        Menampilkan {{ $warga->firstItem() ?? 0 }} - {{ $warga->lastItem() ?? 0 }} dari {{ $warga->total() }} data
+                    </div>
+                    <div>
+                        {{ $warga->links('pagination::bootstrap-5') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
     </div>
 </div>
 @endsection
@@ -188,35 +263,17 @@
 @section('scripts')
 <script>
     $(document).ready(function() {
-        // Search functionality
-        $('#searchInput').on('keyup', function() {
-            const searchText = $(this).val().toLowerCase();
-            filterCards();
+        // Auto submit form ketika input search berubah (dengan delay)
+        let searchTimeout;
+        $('input[name="search"]').on('keyup', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                $(this).closest('form').submit();
+            }, 500);
         });
 
-        // Filter functionality
-        $('#filterJenisKelamin').on('change', function() {
-            filterCards();
-        });
-
-        function filterCards() {
-            const searchText = $('#searchInput').val().toLowerCase();
-            const selectedGender = $('#filterJenisKelamin').val();
-
-            $('.warga-card').each(function() {
-                const name = $(this).data('name');
-                const gender = $(this).data('jenis-kelamin');
-
-                const nameMatch = name.includes(searchText);
-                const genderMatch = !selectedGender || gender === selectedGender;
-
-                if (nameMatch && genderMatch) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
-        }
+        // Tooltips
+        $('[data-bs-toggle="tooltip"]').tooltip();
     });
 </script>
 
@@ -241,6 +298,10 @@
 
     .dropdown-toggle::after {
         display: none;
+    }
+
+    .pagination {
+        margin-bottom: 0;
     }
 </style>
 @endsection

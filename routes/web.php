@@ -49,3 +49,5 @@ Route::resource('jenis-surat', JenisSuratController::class);
 Route::resource('permohonan-surat', PermohonanSuratController::class);
 Route::resource('user', UserController::class);
 
+Route::patch('/permohonan-surat/{id}/status', [PermohonanSuratController::class, 'updateStatus'])
+     ->name('permohonan-surat.update-status');

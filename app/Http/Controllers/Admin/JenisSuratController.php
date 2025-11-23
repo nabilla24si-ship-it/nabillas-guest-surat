@@ -8,12 +8,33 @@ use App\Models\JenisSurat;
 
 class JenisSuratController extends Controller
 {
-    public function index()
-    {
-        $surats = JenisSurat::all();
-        return view('pages.jenis_surat.index', compact('surats'));
+  public function index(Request $request)
+{
+    // Searchable columns
+    $searchableColumns = ['kode', 'nama_jenis'];
+
+    $query = JenisSurat::search($request, $searchableColumns);
+
+    // Filter by kode
+    if ($request->filled('kode')) {
+        $query->where('kode', $request->kode);
     }
 
+    // Filter by syarat
+    if ($request->filled('syarat')) {
+        if ($request->syarat === 'with') {
+            $query->whereNotNull('syarat_json')->where('syarat_json', '!=', '');
+        } elseif ($request->syarat === 'without') {
+            $query->whereNull('syarat_json')->orWhere('syarat_json', '');
+        }
+    }
+
+    $surats = $query->orderBy('created_at', 'desc')
+                   ->paginate(9)
+                   ->withQueryString();
+
+    return view('pages.jenis_surat.index', compact('surats'));
+}
     public function create()
     {
         return view('pages.jenis_surat.create');

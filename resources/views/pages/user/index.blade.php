@@ -39,8 +39,8 @@
 
         <div class="d-flex justify-content-between align-items-center mb-5">
             <div>
-                <h2 class="text-primary mb-1">Data User</h2>
-                <p class="mb-0">List data seluruh user</p>
+                <h2 class="text-primary mb-1">Data User Sistem</h2>
+                <p class="mb-0">Menampilkan {{ $dataUser->total() }} user terdaftar</p>
             </div>
             <div>
                 <a href="{{ route('user.create') }}" class="btn btn-success">
@@ -48,6 +48,79 @@
                 </a>
             </div>
         </div>
+
+        <!-- Search and Filter Form -->
+        <form method="GET" action="{{ route('user.index') }}" class="mb-4">
+            <div class="row g-3">
+                <!-- Search Input -->
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control"
+                               value="{{ request('search') }}" placeholder="Cari nama atau email..."
+                               aria-label="Search">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                        @if(request('search'))
+                            <a href="{{ request()->fullUrlWithQuery(['search' => null]) }}"
+                               class="btn btn-outline-secondary" id="clear-search">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Filter Status -->
+                <div class="col-md-3">
+                    <select name="status" class="form-select" onchange="this.form.submit()">
+                        <option value="">Semua Status</option>
+                        <option value="recent" {{ request('status') == 'recent' ? 'selected' : '' }}>User Baru (7 hari)</option>
+                        <option value="verified" {{ request('status') == 'verified' ? 'selected' : '' }}>Terverifikasi</option>
+                        <option value="unverified" {{ request('status') == 'unverified' ? 'selected' : '' }}>Belum Verifikasi</option>
+                    </select>
+                </div>
+
+                <!-- Sort By -->
+                <div class="col-md-3">
+                    <select name="sort" class="form-select" onchange="this.form.submit()">
+                        <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Terbaru</option>
+                        <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Terlama</option>
+                        <option value="name_asc" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>Nama A-Z</option>
+                        <option value="name_desc" {{ request('sort') == 'name_desc' ? 'selected' : '' }}>Nama Z-A</option>
+                    </select>
+                </div>
+
+                <!-- Reset Filter -->
+                <div class="col-md-2">
+                    <a href="{{ route('user.index') }}" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-refresh me-1"></i>Reset
+                    </a>
+                </div>
+            </div>
+        </form>
+
+        <!-- Info Filter Aktif -->
+        @if(request()->anyFilled(['search', 'status', 'sort']))
+        <div class="alert alert-info mb-4">
+            <small>
+                <i class="fas fa-info-circle me-1"></i>
+                Filter aktif:
+                @if(request('search')) <span class="badge bg-primary me-1">Pencarian: "{{ request('search') }}"</span> @endif
+                @if(request('status') == 'recent') <span class="badge bg-primary me-1">User Baru</span> @endif
+                @if(request('status') == 'verified') <span class="badge bg-primary me-1">Terverifikasi</span> @endif
+                @if(request('status') == 'unverified') <span class="badge bg-primary me-1">Belum Verifikasi</span> @endif
+                @if(request('sort')) <span class="badge bg-primary me-1">Urutan: {{ [
+                    'newest' => 'Terbaru',
+                    'oldest' => 'Terlama',
+                    'name_asc' => 'Nama A-Z',
+                    'name_desc' => 'Nama Z-A'
+                ][request('sort')] }}</span> @endif
+                <a href="{{ route('user.index') }}" class="text-danger ms-2">
+                    <i class="fas fa-times me-1"></i>Hapus semua filter
+                </a>
+            </small>
+        </div>
+        @endif
 
         <!-- User Cards -->
         <div class="row" id="userContainer">
@@ -59,7 +132,15 @@
                                 <h5 class="mb-0 text-primary">
                                     <i class="fas fa-user me-2"></i>{{ $item->name }}
                                 </h5>
-                                <span class="badge bg-success">Active</span>
+                                <div>
+                                    @if($item->id === auth()->id())
+                                        <span class="badge bg-primary">Anda</span>
+                                    @else
+                                        <span class="badge {{ $item->email_verified_at ? 'bg-success' : 'bg-warning text-dark' }}">
+                                            {{ $item->email_verified_at ? 'Terverifikasi' : 'Belum Verifikasi' }}
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                         <div class="card-body">
@@ -69,17 +150,27 @@
                                     <i class="fas fa-envelope text-muted me-2"></i>
                                     <span class="small">{{ $item->email }}</span>
                                 </div>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-key text-muted me-2"></i>
-                                    <span class="small text-muted">Password terenkripsi</span>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-calendar text-muted me-2"></i>
+                                    <span class="small text-muted">
+                                        Bergabung: {{ $item->created_at->format('d M Y') }}
+                                    </span>
                                 </div>
+                                @if($item->email_verified_at)
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <span class="small text-success">
+                                        Terverifikasi: {{ $item->email_verified_at->format('d M Y') }}
+                                    </span>
+                                </div>
+                                @endif
                             </div>
 
                             <!-- Security Note -->
                             <div class="alert alert-warning alert-sm mb-3">
                                 <small>
                                     <i class="fas fa-shield-alt me-1"></i>
-                                    Password disimpan secara aman dengan enkripsi
+                                    Password terenkripsi dengan aman
                                 </small>
                             </div>
 
@@ -89,22 +180,31 @@
                                    class="btn btn-warning btn-sm">
                                     <i class="fas fa-edit me-1"></i>Edit User
                                 </a>
-                                <div class="btn-group" role="group">
-                                    <form action="{{ route('user.destroy', $item->id) }}" method="POST" class="w-100">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm w-100"
-                                                onclick="return confirm('Yakin hapus user {{ $item->name }}?')">
-                                            <i class="fas fa-trash me-1"></i>Hapus
-                                        </button>
-                                    </form>
-                                </div>
+                                @if($item->id !== auth()->id())
+                                <form action="{{ route('user.destroy', $item->id) }}" method="POST">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger btn-sm w-100"
+                                            onclick="return confirm('Yakin hapus user {{ $item->name }}?')">
+                                        <i class="fas fa-trash me-1"></i>Hapus
+                                    </button>
+                                </form>
+                                @else
+                                <button class="btn btn-secondary btn-sm" disabled>
+                                    <i class="fas fa-ban me-1"></i>Tidak Dapat Dihapus
+                                </button>
+                                @endif
                             </div>
                         </div>
                         <div class="card-footer bg-transparent">
                             <small class="text-muted">
                                 <i class="fas fa-clock me-1"></i>
-                                Terdaftar sejak {{ $item->created_at->format('d M Y') }}
+                                ID: {{ $item->id }} •
+                                @if($item->created_at->diffInDays(now()) < 7)
+                                    <span class="text-success">Baru</span>
+                                @else
+                                    {{ $item->created_at->diffForHumans() }}
+                                @endif
                             </small>
                         </div>
                     </div>
@@ -114,16 +214,44 @@
                     <div class="card border-0 text-center py-5">
                         <div class="card-body">
                             <i class="fas fa-users fa-4x text-muted mb-3"></i>
-                            <h4 class="text-muted">Belum ada data user</h4>
-                            <p class="text-muted mb-4">Silakan tambah user pertama Anda</p>
-                            <a href="{{ route('user.create') }}" class="btn btn-primary btn-lg">
-                                <i class="fas fa-plus me-2"></i>Tambah User
-                            </a>
+                            <h4 class="text-muted">Tidak ada data user</h4>
+                            <p class="text-muted mb-4">
+                                @if(request()->anyFilled(['search', 'status']))
+                                    User tidak ditemukan dengan filter yang dipilih
+                                @else
+                                    Belum ada data user
+                                @endif
+                            </p>
+                            @if(request()->anyFilled(['search', 'status']))
+                                <a href="{{ route('user.index') }}" class="btn btn-primary">
+                                    <i class="fas fa-refresh me-2"></i>Reset Filter
+                                </a>
+                            @else
+                                <a href="{{ route('user.create') }}" class="btn btn-primary">
+                                    <i class="fas fa-plus me-2"></i>Tambah User Pertama
+                                </a>
+                            @endif
                         </div>
                     </div>
                 </div>
             @endforelse
         </div>
+
+        <!-- Pagination -->
+        @if($dataUser->hasPages())
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="text-muted">
+                        Menampilkan {{ $dataUser->firstItem() ?? 0 }} - {{ $dataUser->lastItem() ?? 0 }} dari {{ $dataUser->total() }} user
+                    </div>
+                    <div>
+                        {{ $dataUser->links('pagination::bootstrap-5') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
     </div>
 </div>
 @endsection
@@ -158,24 +286,27 @@
         border-top: 1px solid #e9ecef;
         padding: 0.75rem 1.25rem;
     }
+
+    .pagination {
+        margin-bottom: 0;
+    }
 </style>
 @endpush
 
 @push('scripts')
 <script>
     $(document).ready(function() {
-        // Search functionality
-        $('#searchInput').on('keyup', function() {
-            const searchText = $(this).val().toLowerCase();
-            $('.user-card').each(function() {
-                const name = $(this).data('name');
-                if (name.includes(searchText)) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
+        // Auto submit form ketika input search berubah (dengan delay)
+        let searchTimeout;
+        $('input[name="search"]').on('keyup', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                $(this).closest('form').submit();
+            }, 500);
         });
+
+        // Tooltips
+        $('[data-bs-toggle="tooltip"]').tooltip();
     });
 </script>
 @endpush

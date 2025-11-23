@@ -11,10 +11,42 @@ use Illuminate\Support\Str;
 
 class PermohonanSuratController extends Controller
 {
-    public function index()
+     public function index(Request $request)
     {
-        $permohonans = PermohonanSurat::with(['pemohon', 'jenisSurat'])->latest()->get();
-        return view('pages.permohonan_surat.index', compact('permohonans'));
+        // Searchable columns
+        $searchableColumns = ['nomor_pemohonan', 'catatan'];
+
+        // Query dengan relations, search, dan filter
+        $query = PermohonanSurat::with(['pemohon', 'jenisSurat'])
+                               ->search($request, $searchableColumns);
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by jenis surat
+        if ($request->filled('jenis_surat')) {
+            $query->where('jenis_id', $request->jenis_surat);
+        }
+
+        // Filter by tanggal
+        if ($request->filled('tanggal_mulai')) {
+            $query->whereDate('tanggal_pengajuan', '>=', $request->tanggal_mulai);
+        }
+
+        if ($request->filled('tanggal_selesai')) {
+            $query->whereDate('tanggal_pengajuan', '<=', $request->tanggal_selesai);
+        }
+
+        $permohonans = $query->latest()
+                            ->paginate(12)
+                            ->withQueryString();
+
+        $jenisSuratList = JenisSurat::all();
+        $statusList = ['pending', 'diproses', 'ditolak', 'selesai'];
+
+        return view('pages.permohonan_surat.index', compact('permohonans', 'jenisSuratList', 'statusList'));
     }
 
     public function create()

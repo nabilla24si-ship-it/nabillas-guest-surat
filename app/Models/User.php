@@ -45,4 +45,30 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    // Scope untuk search
+    public function scopeSearch($query, $request, array $columns)
+    {
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request, $columns) {
+                foreach ($columns as $column) {
+                    $q->orWhere($column, 'LIKE', '%' . $request->search . '%');
+                }
+            });
+        }
+        return $query;
+    }
+
+    // Scope untuk filter status
+    public function scopeFilterByStatus($query, $status)
+    {
+        if ($status === 'recent') {
+            return $query->where('created_at', '>=', now()->subDays(7));
+        } elseif ($status === 'verified') {
+            return $query->whereNotNull('email_verified_at');
+        } elseif ($status === 'unverified') {
+            return $query->whereNull('email_verified_at');
+        }
+        return $query;
+    }
 }

@@ -7,9 +7,20 @@ use App\Models\Warga;
 
 class WargaController extends Controller
 {
-    public function index()
+     public function index(Request $request)
     {
-        $warga = Warga::all();
+        // Filterable columns
+        $filterableColumns = ['jenis_kelamin', 'agama'];
+
+        // Searchable columns
+        $searchableColumns = ['nama', 'alamat', 'no_ktp', 'pekerjaan', 'email'];
+
+        // Query dengan pagination, filter, dan search
+        $warga = Warga::filter($request, $filterableColumns)
+                     ->search($request, $searchableColumns)
+                     ->paginate(12)
+                     ->withQueryString();
+
         return view('pages.warga.index', compact('warga'));
     }
 ////
